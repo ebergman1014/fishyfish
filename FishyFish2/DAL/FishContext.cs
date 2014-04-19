@@ -16,7 +16,6 @@ namespace FishyFish2.DAL
         public DbSet<Catch> Catches {get; set; }
         public DbSet<Team> Teams {get; set; }
         public DbSet<Membership> Memberships {get; set; }
-        DbModelBuilder
 
         //protected override void OnModelCreating(DbModelBuilder modelBuilder)
         //{
