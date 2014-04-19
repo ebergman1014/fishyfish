@@ -72,7 +72,7 @@ namespace FishyFish2.Controllers
         {
             return View();
         }
-
+        
         //
         // POST: /Account/Register
         [HttpPost]
@@ -80,6 +80,7 @@ namespace FishyFish2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
+            //helllo
             if (ModelState.IsValid)
             {
                 var user = new Person()
