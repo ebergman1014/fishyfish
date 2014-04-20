@@ -1,5 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FishyFish2.DAL;
+using Microsoft.AspNet.Identity.EntityFramework;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using System.Web.Mvc;
 
 namespace FishyFish2.Models
 {
@@ -25,7 +30,7 @@ namespace FishyFish2.Models
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
-        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        [System.ComponentModel.DataAnnotations.CompareAttribute("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
     }
 
@@ -69,8 +74,98 @@ namespace FishyFish2.Models
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [System.ComponentModel.DataAnnotations.CompareAttribute("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
 
+        public Person GetPerson()
+        {
+            Person p = new Person()
+            {
+                Email = this.Email,
+                Name = this.Name,
+                Dob = this.Dob,
+                PhoneNumber = this.PhoneNumber,
+                SignupDate = DateTime.Now,
+                UserName = this.UserName,
+                TshirtSize = this.TshirtSize,
+                Affiliation = this.Affiliation,
+                PaymentMethod = this.PaymentMethod,
+            };
+            return p;
+        }
     }
+
+    public class EditUserViewModel : Person {
+        public EditUserViewModel(Person p)
+        {
+                this.Affiliation = p.Affiliation;
+                this.Dob = Dob;
+                this.Name = Name;
+                this.PaymentMethod = PaymentMethod;
+                this.PhoneNumber = PhoneNumber;
+                this.TshirtSize = TshirtSize;
+                this.SignupDate = SignupDate;
+        }
+
+    }
+
+    public class SelectUserRolesViewModel : Person
+    {
+        public SelectUserRolesViewModel()
+        {
+            this.Roles = new List<SelectRoleEditorViewModel>();
+        }
+
+
+        // Enable initialization with an instance of ApplicationUser:
+        public SelectUserRolesViewModel(Person p)
+            : this()
+        {
+            this.Affiliation = p.Affiliation;
+            this.Dob = Dob;
+            this.Name = Name;
+            this.PaymentMethod = PaymentMethod;
+            this.PhoneNumber = PhoneNumber;
+            this.TshirtSize = TshirtSize;
+            this.SignupDate = SignupDate;
+
+            var Db = new FishContext();
+
+            // Add all available roles to the list of EditorViewModels:
+            var allRoles = Db.Roles;
+            foreach (var role in allRoles)
+            {
+                // An EditorViewModel will be used by Editor Template:
+                var rvm = new SelectRoleEditorViewModel(role);
+                this.Roles.Add(rvm);
+            }
+
+            // Set the Selected property to true for those roles for 
+            // which the current user is a member:
+            foreach (var userRole in p.Roles)
+            {
+                var checkUserRole =
+                    this.Roles.Find(r => r.RoleName == userRole.Role.Name);
+                checkUserRole.Selected = true;
+            }
+        }
+
+        public List<SelectRoleEditorViewModel> Roles { get; set; }
+    }
+
+    // Used to display a single role with a checkbox, within a list structure:
+    public class SelectRoleEditorViewModel
+    {
+        public SelectRoleEditorViewModel() { }
+        public SelectRoleEditorViewModel(IdentityRole role)
+        {
+            this.RoleName = role.Name;
+        }
+
+        public bool Selected { get; set; }
+
+        [Required]
+        public string RoleName { get; set; }
+    }
+
 }

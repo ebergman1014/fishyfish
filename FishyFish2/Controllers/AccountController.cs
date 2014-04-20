@@ -25,11 +25,13 @@ namespace FishyFish2.Controllers
         public AccountController(UserManager<Person> userManager)
         {
             UserManager = userManager;
+
         }
         #endregion
 
         #region Generated .NET Stuff
         public UserManager<Person> UserManager { get; private set; }
+
 
         //
         // GET: /Account/Login
@@ -80,28 +82,15 @@ namespace FishyFish2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
-            //helllo
             if (ModelState.IsValid)
             {
-                var user = new Person()
-                {
-                    Email = model.Email,
-                    Name = model.Name,
-                    Dob = model.Dob,
-                    PhoneNumber = model.PhoneNumber,
-                    SignupDate = DateTime.Now,
-                    UserName = model.UserName,
-                    TshirtSize = model.TshirtSize,
-                    Affiliation = model.Affiliation,
-                    PaymentMethod = model.PaymentMethod,
-
-                };
-
-                var result = await UserManager.CreateAsync(user, model.Password);
-                var res = new IdentityRole();
+                var person = model.GetPerson();
+                var result = await UserManager.CreateAsync(person, model.Password);
+                var idManager = new IdentityManager();
                 if (result.Succeeded)
                 {
-                    await SignInAsync(user, isPersistent: false);
+                    idManager.AddUserToRole(person.Id.ToString(), PersonRoles.User);
+                    await SignInAsync(person, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
                 else
@@ -109,7 +98,6 @@ namespace FishyFish2.Controllers
                     AddErrors(result);
                 }
             }
-
             // If we got this far, something failed, redisplay form
             return View(model);
         }
@@ -341,19 +329,37 @@ namespace FishyFish2.Controllers
 
         #region Person Methods
 
-        // POST : /Account/Update
-        public Person Update()
+        // GET : /Account/Update
+        public ActionResult Update()
         {
+            var person = UserManager.FindById(User.Identity.GetUserId());
 
-            return null;
+            if (person == null)
+            {
+                return HttpNotFound();
+            }
+            return View(person);
         }
 
         // POST : /Account/Update
-        public ActionResult Update(int personId)
+        public async Task<ActionResult> Update(Person person)
         {
-
+            var store = new UserStore<Person>(new FishContext());
+            var manager = new UserManager<Person>(store);
+            if (ModelState.IsValid)
+            {
+                var result = await manager.UpdateAsync(person);
+                var context = store.Context;
+                context.SaveChanges();
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index");
+                }
+            }
             return View();
         }
+
+
         #endregion
 
         #region Helpers
